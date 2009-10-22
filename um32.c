@@ -295,6 +295,7 @@ int execute (machine m, uint32 ins)
             // Halt.
             //   The universal machine stops computation.
             INS_TRACE("Halt");
+            printf("\n\n\nHALT\n");
             rc = 1;
             break;
 
@@ -399,11 +400,11 @@ void runMachine (machine m)
     DEBUG_LOG("Firing up the virtual machine...");
 
     while (rc == 0) {
-        INS_TRACE("Executing instruction at address %u: 0x%04x", m->ip, m->prog->mem[m->ip]);
-        ins = m->prog->mem[m->ip];
+        ins = htonl(m->prog->mem[m->ip]);
+        INS_TRACE("Executing instruction at address %u: 0x%04x", m->ip, ins);
         rc = execute(m, ins);
         m->ip++;
-        INS_TRACE("Registers: r0:0x%08x r1:0x%08x r2:0x%08x r3:0x%08x r4:0x%08x r5:0x%08x r6:0x%08x r7:0x%08x", m->regs[0], m->regs[1], m->regs[2], m->regs[3], m->regs[4], m->regs[5], m->regs[6], m->regs[7]);
+        INS_TRACE("Registers: r0:0x%04x r1:0x%04x r2:0x%04x r3:0x%04x r4:0x%04x r5:0x%04x r6:0x%04x r7:0x%04x", m->regs[0], m->regs[1], m->regs[2], m->regs[3], m->regs[4], m->regs[5], m->regs[6], m->regs[7]);
         INS_TRACE("");
     }
 }
@@ -552,7 +553,7 @@ int main (int argc, char *argv[])
     uint32 buf = 0;
     uint32 ip = 0;
     while (read(fd, &buf, 4) > 0) {
-        m->prog->mem[ip++] = htonl(buf);
+        m->prog->mem[ip++] = buf;
     }
     close(fd);
 
