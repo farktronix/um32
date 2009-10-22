@@ -287,8 +287,8 @@ int execute (machine m, uint32 ins)
             //   either register B or register C has a 0 bit in that
             //   position.  Otherwise the bit in register A receives
             //   the 0 bit.
-            INS_TRACE("Not-And: r%d = %x ~& %x", regA, m->regs[regB], m->regs[regC]);
-            m->regs[regA] = ~(m->regs[regB] & m->regs[regC]);
+            INS_TRACE("Not-And: r%d (%x) = ~%x | ~%x", regA, ~(m->regs[regB]) | ~(m->regs[regC]),  m->regs[regB], m->regs[regC]);
+            m->regs[regA] = ~(m->regs[regB]) | ~(m->regs[regC]);
             break;
 
         case 7:
@@ -360,6 +360,7 @@ int execute (machine m, uint32 ins)
             //   velocity.
             INS_TRACE("Load Program: %x", m->regs[regB]);
             m->prog = dupArray(m, m->regs[regB], 0);
+            m->ip = m->regs[regC];
             break;
 
         case 13:
@@ -379,7 +380,7 @@ int execute (machine m, uint32 ins)
             //
             //   The value indicated is loaded into the register A
             //   forthwith.
-            regA = (ins & 0x0E000000) >> 25;
+            regA = (ins & 0xE000000) >> 25;
             INS_TRACE("Orthography: r%u = 0x%08x", regA, ins & 0x1FFFFFF);
             m->regs[regA] = ins & 0x1FFFFFF;
             break;
@@ -397,13 +398,17 @@ void runMachine (machine m)
     int rc = 0;
     uint32 ins = 0;
 
-    DEBUG_LOG("Firing up the virtual machine...");
+    DEBUG_LOG("Firing up the virtual machine with offset %u", m->ip);
 
     while (rc == 0) {
+        if (m->ip > m->prog->size) {
+            printf("Machine ran out of instructions. Stopping execution.\n");
+            return;
+        }
         ins = htonl(m->prog->mem[m->ip]);
         INS_TRACE("Executing instruction at address %u: 0x%04x", m->ip, ins);
-        rc = execute(m, ins);
         m->ip++;
+        rc = execute(m, ins);
         INS_TRACE("Registers: r0:0x%04x r1:0x%04x r2:0x%04x r3:0x%04x r4:0x%04x r5:0x%04x r6:0x%04x r7:0x%04x", m->regs[0], m->regs[1], m->regs[2], m->regs[3], m->regs[4], m->regs[5], m->regs[6], m->regs[7]);
         INS_TRACE("");
     }
@@ -512,6 +517,7 @@ void usage (void)
 
 static struct option longopts[] = {
     { "test",           no_argument,        NULL,   't' },
+    { "offset",         required_argument,  NULL,   'o' },
     { NULL,             0,                  NULL,    0  }
 };
 
@@ -525,6 +531,7 @@ int main (int argc, char *argv[])
     opterr = 0;
     int ch;
     int status;
+    int offset = 0;
     while ((ch = getopt_long(argc, argv, "", longopts, NULL)) != -1) {
         switch(ch) {
             case 't':
@@ -533,13 +540,16 @@ int main (int argc, char *argv[])
                 fflush(stdout);
                 exit(status);
                 break;
+            case 'o':
+                offset = strtol(optarg, NULL, 10); 
+                break;
             default:
                 break;
         }
     }
     
     machine m = (machine)calloc(1, sizeof(_machine));
-    char *progname = argv[1];
+    char *progname = argv[optind];
     int fd = open(progname, O_RDONLY);
     if (fd == -1) {
         printf("Could not open file at %s: %s\n", progname, strerror(errno));
@@ -547,15 +557,19 @@ int main (int argc, char *argv[])
     }
     struct stat sb = {0};
     fstat(fd, &sb);
-    m->prog = allocMem(m, 0, sb.st_size / sizeof(uint32));
+    m->prog = allocMem(m, 0, sb.st_size);
     DEBUG_LOG("Loading %llu bytes of program into memory (%llu instructions)", sb.st_size, sb.st_size/sizeof(uint32));
    
-    uint32 buf = 0;
+    uint32 buf[1024] = {0};
+    ssize_t rsize = 0;
     uint32 ip = 0;
-    while (read(fd, &buf, 4) > 0) {
-        m->prog->mem[ip++] = buf;
+    while ((rsize = read(fd, buf, 1024)) > 0) {
+        memcpy(m->prog->mem + ip, buf, rsize); 
+        ip += rsize;
     }
     close(fd);
+
+    m->ip = offset;
 
     runMachine(m);
 
