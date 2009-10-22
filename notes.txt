@@ -1,0 +1,23 @@
+howie xyzzy
+ohmega bidirectional
+
+
+ADVENTURE
+
+go north
+take bolt
+take spring
+incinerate spring
+take button
+take processor
+take red pill
+incinerate red pill
+take radio
+take cache
+combine cache processor
+take blue transistor
+combine blue transistor radio
+take antenna
+combine antenna radio
+take screw
+take motherboard
