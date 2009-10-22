@@ -2,6 +2,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 
 #define DEBUG 1
 
@@ -25,9 +33,15 @@ typedef struct {
 
 typedef struct {
     uint32 regs[NUM_REGS];
-    array *heap[1<<8];
     uint32 ip;
+    array *heap[1<<8];
+    array prog;
+    uint32 lastAddr;
 } _machine, *machine;
+
+
+// ----------------------------------------------------------------------------
+// Memory Management
 
 // translates a virtual platter address to a physical address
 array v2p (machine m, uint32 addr)
@@ -93,6 +107,17 @@ array allocMem (machine m, uint32 addr, uint32 size)
     return newArr;
 }
 
+uint32 allocArray (machine m, uint32 size)
+{
+    array dest = NULL;
+    do {
+        dest = v2p(m, ++(m->lastAddr));
+        if (dest == NULL) break;
+    } while (1);
+    allocMem(m, m->lastAddr, size);
+    return m->lastAddr;
+}
+
 // returns 1 if the array didn't previously exist, 0 if it was successfully freed
 int abandonArray (machine m, uint32 addr)
 {
@@ -119,6 +144,15 @@ int abandonArray (machine m, uint32 addr)
     }
 
     return 1;
+}
+
+array dupArray (machine m, uint32 sourceAddr, uint32 destAddr)
+{
+    array source = v2p(m, sourceAddr);
+    abandonArray(m, destAddr);
+    array dest = allocMem(m, destAddr, source->size);
+    memcpy(dest->mem, source->mem, source->size * sizeof(uint32));
+    return dest;
 }
 
 uint32 *memAtArray (machine m, uint32 addr, uint32 offset)
@@ -155,11 +189,198 @@ uint32 *writeArray (machine m, uint32 addr, uint32 offset, uint32 value)
     return retval;
 }
 
+
+
+// ----------------------------------------------------------------------------
+// Instruction Execution
+
 // returns the next instruction address, or 0 for the next instruction
-uint32 execute (machine m, uint32 ins)
+int execute (machine m, uint32 ins)
 {
-    return 0;
+    int rc = 0;
+
+    char opcode = (ins & 0xF0000000) >> 24;
+    uint32 regA = (ins & 0x000001C0) >> 6;
+    uint32 regB = (ins & 0x00000038) >> 3;
+    uint32 regC = (ins & 0x00000007);
+
+    int input = 0;
+
+//                          A     C
+//                          |     |
+//                          vvv   vvv                    
+//  .--------------------------------.
+//  |VUTSRQPONMLKJIHGFEDCBA9876543210|
+//  `--------------------------------'
+//   ^^^^                      ^^^
+//   |                         |
+//   operator number           B
+//
+//  Figure 2. Standard Operators
+
+    switch (opcode) {
+        case 0:
+            // Conditional Move.
+            //  The register A receives the value in register B,
+            //  unless the register C contains 0.
+            if (m->regs[regC] != 0) {
+                m->regs[regA] = m->regs[regB];
+            }
+            break;
+
+        case 1:
+            // Array Index.
+            //   The register A receives the value stored at offset
+            //   in register C in the array identified by B.
+            m->regs[regA] = readArray(m, m->regs[regB], m->regs[regC], NULL);
+            break;
+
+        case 2:
+            // Array Amendment.
+            //   The array identified by A is amended at the offset
+            //   in register B to store the value in register C.
+            writeArray(m, m->regs[regA], m->regs[regB], m->regs[regC]);
+            break;
+
+        case 3:
+            // Addition.
+            //   The register A receives the value in register B plus
+            //   the value in register C, modulo 2^32.
+            m->regs[regA] = (m->regs[regB] + m->regs[regC]);
+            break;
+
+        case 4:
+            // Multiplication.
+            //   The register A receives the value in register B times
+            //   the value in register C, modulo 2^32.
+            m->regs[regA] = (m->regs[regB] * m->regs[regC]);
+            break;
+
+        case 5:
+            // Division.
+            //   The register A receives the value in register B
+            //   divided by the value in register C, if any, where
+            //   each quantity is treated treated as an unsigned 32
+            //   bit number.
+            m->regs[regA] = (m->regs[regB] / m->regs[regC]);
+            break;
+
+        case 6:
+            // Not-And.
+            //   Each bit in the register A receives the 1 bit if
+            //   either register B or register C has a 0 bit in that
+            //   position.  Otherwise the bit in register A receives
+            //   the 0 bit.
+            m->regs[regA] = ~(m->regs[regB] & m->regs[regC]);
+            break;
+
+        case 7:
+            // Halt.
+            //   The universal machine stops computation.
+            rc = 1;
+            break;
+
+        case 8:
+            // Allocation.
+            //   A new array is created with a capacity of platters
+            //   commensurate to the value in the register C. This
+            //   new array is initialized entirely with platters
+            //   holding the value 0. A bit pattern not consisting of
+            //   exclusively the 0 bit, and that identifies no other
+            //   active allocated array, is placed in the B register.
+            m->regs[regB] = allocArray(m, m->regs[regC]);
+            break;
+
+        case 9:
+            // Abandonment.
+            //   The array identified by the register C is abandoned.
+            //   Future allocations may then reuse that identifier.
+            abandonArray(m, m->regs[regC]);
+            break;
+
+        case 10:
+            // Output.
+            //   The value in the register C is displayed on the console
+            //   immediately. Only values between and including 0 and 255
+            //   are allowed.
+            printf("%c", m->regs[regC]);
+            break;
+
+        case 11:
+            // Input.
+            //   The universal machine waits for input on the console.
+            //   When input arrives, the register C is loaded with the
+            //   input, which must be between and including 0 and 255
+            //   If the end of input has been signaled, then the
+            //   register C is endowed with a uniform value pattern
+            //   where every place is pregnant with the 1 bit.
+            input = getc(stdin);
+            if (input == EOF) {
+                m->regs[regC] = 0xFFFFFFFF;
+            } else {
+                m->regs[regC] = input;
+            }
+            break;
+
+        case 12:
+            // Load Program.
+            //   The array identified by the B register is duplicated
+            //   and the duplicate shall replace the '0' array,
+            //   regardless of size. The execution finger is placed
+            //   to indicate the platter of this array that is
+            //   described by the offset given in C, where the value
+            //   0 denotes the first platter, 1 the second, et
+            //   cetera.
+            //
+            //   The '0' array shall be the most sublime choice for
+            //   loading, and shall be handled with the utmost
+            //   velocity.
+            m->prog = dupArray(m, m->regs[regB], 0);
+            break;
+
+
+        case 13:
+            // Orthography.
+            //
+            //       A  
+            //       |  
+            //       vvv
+            //  .--------------------------------.
+            //  |VUTSRQPONMLKJIHGFEDCBA9876543210|
+            //  `--------------------------------'
+            //   ^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^
+            //   |      |
+            //   |      value
+            //   |
+            //   operator number
+            //
+            //   The value indicated is loaded into the register A
+            //   forthwith.
+            regA = (ins & 0x0E000000) >> 25;
+            m->regs[regA] = ins & 0x1FFFFFF;     
+            break;
+    }
+
+    return rc;
 }
+
+void runMachine (machine m)
+{
+    int rc = 0;
+    uint32 ins = 0;
+
+    while (rc == 0) {
+        ins = m->prog->mem[m->ip];
+        rc = execute(m, ins);
+        m->ip++;
+
+    }
+}
+
+
+
+// ----------------------------------------------------------------------------
+// Unit Tests
 
 uint32 testRead (machine m, uint32 addr, uint32 offset, uint32 expected)
 {
@@ -247,6 +468,11 @@ int runTest (void)
     return rc;
 }
 
+
+
+// ----------------------------------------------------------------------------
+// Main
+
 void usage (void) 
 {
     printf("Usage: %s file\n", getprogname());
@@ -279,6 +505,27 @@ int main (int argc, char *argv[])
                 break;
         }
     }
+    
+    machine m = (machine)calloc(1, sizeof(_machine));
+    char *progname = argv[1];
+    int fd = open(progname, O_RDONLY);
+    if (fd == -1) {
+        printf("Could not open file at %s: %s\n", progname, strerror(errno));
+        exit(1);
+    }
+    struct stat sb = {0};
+    fstat(fd, &sb);
+    m->prog = allocMem(m, 0, sb.st_size / sizeof(uint32));
+    DEBUG_LOG("Loaded %llu bytes of program into memory (%llu instructions)", sb.st_size, sb.st_size/sizeof(uint32));
+   
+    uint32 buf = 0;
+    uint32 ip = 0;
+    while (read(fd, &buf, 1024) != -1) {
+        m->prog->mem[ip] = htonl(buf);
+    }
+    close(fd);
+
+    runMachine(m);
 
     return 0;
 }
