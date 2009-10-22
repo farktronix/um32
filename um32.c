@@ -11,8 +11,11 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#define DEBUG 1
-#define TRACE 1
+#define DEBUG 0
+#define TRACE 0
+
+// TODO:
+//  - Better memory allocator
 
 #define NUM_REGS 8
 
@@ -44,6 +47,7 @@ typedef struct {
     array *heap[1<<8];
     array prog;
     uint32 lastAddr;
+    uint64_t icount;
 } _machine, *machine;
 
 
@@ -185,7 +189,7 @@ uint32 readArray (machine m, uint32 addr, uint32 offset, char *success)
         return (uint32)-1;
     } else {
         if (success) *success = 1;
-        return *retval;
+        return ntohl(*retval);
     }
 }
 
@@ -193,7 +197,7 @@ uint32 *writeArray (machine m, uint32 addr, uint32 offset, uint32 value)
 {
     uint32 *retval = memAtArray(m, addr, offset);
     if (retval == NULL) return NULL;
-    *retval = value;
+    *retval = htonl(value);
     return retval;
 }
 
@@ -326,6 +330,7 @@ int execute (machine m, uint32 ins)
             //   are allowed.
             INS_TRACE("Output: %c", (char)m->regs[regC]);
             putchar(m->regs[regC]);
+            fflush(stdout);
             break;
 
         case 11:
@@ -411,7 +416,10 @@ void runMachine (machine m)
         rc = execute(m, ins);
         INS_TRACE("Registers: r0:0x%04x r1:0x%04x r2:0x%04x r3:0x%04x r4:0x%04x r5:0x%04x r6:0x%04x r7:0x%04x", m->regs[0], m->regs[1], m->regs[2], m->regs[3], m->regs[4], m->regs[5], m->regs[6], m->regs[7]);
         INS_TRACE("");
+
+        m->icount++;
     }
+    DEBUG_LOG("The VM executed %llu instructions", m->icount);
 }
 
 
@@ -560,11 +568,9 @@ int main (int argc, char *argv[])
     m->prog = allocMem(m, 0, sb.st_size);
     DEBUG_LOG("Loading %llu bytes of program into memory (%llu instructions)", sb.st_size, sb.st_size/sizeof(uint32));
    
-    uint32 buf[1024] = {0};
-    ssize_t rsize = 0;
     uint32 ip = 0;
-    while ((rsize = read(fd, buf, 1024)) > 0) {
-        memcpy(m->prog->mem + ip, buf, rsize); 
+    ssize_t rsize = 0;
+    while ((rsize = read(fd, ((char*)m->prog->mem) + ip, 4096)) > 0) {
         ip += rsize;
     }
     close(fd);
