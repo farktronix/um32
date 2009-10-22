@@ -30,7 +30,7 @@ typedef struct {
 } _machine, *machine;
 
 // translates a virtual platter address to a physical address
-array v2p (uint32 addr, machine m)
+array v2p (machine m, uint32 addr)
 {
     uint8 A = (addr & 0xFF000000) >> 24;
     uint8 B = (addr & 0x00FF0000) >> 16;
@@ -51,7 +51,7 @@ array v2p (uint32 addr, machine m)
     return NULL; 
 }
 
-array allocMem (uint32 addr, uint32 size, machine m)
+array allocMem (machine m, uint32 addr, uint32 size)
 {
     uint8 A = (addr & 0xFF000000) >> 24;
     uint8 B = (addr & 0x00FF0000) >> 16;
@@ -94,7 +94,7 @@ array allocMem (uint32 addr, uint32 size, machine m)
 }
 
 // returns 1 if the array didn't previously exist, 0 if it was successfully freed
-int abandonArray (uint32 addr, machine m)
+int abandonArray (machine m, uint32 addr)
 {
     uint8 A = (addr & 0xFF000000) >> 24;
     uint8 B = (addr & 0x00FF0000) >> 16;
@@ -121,9 +121,9 @@ int abandonArray (uint32 addr, machine m)
     return 1;
 }
 
-uint32 *memAtArray (uint32 addr, uint32 offset, machine m)
+uint32 *memAtArray (machine m, uint32 addr, uint32 offset)
 {
-    array a = v2p(addr, m);
+    array a = v2p(m, addr);
     if (a == NULL) {
         DEBUG_LOG("Array not found at address %u", addr);
         return NULL;
@@ -135,9 +135,9 @@ uint32 *memAtArray (uint32 addr, uint32 offset, machine m)
     return a->mem + offset;
 }
 
-uint32 readArray (uint32 addr, uint32 offset, machine m, char *success)
+uint32 readArray (machine m, uint32 addr, uint32 offset, char *success)
 {
-    uint32 *retval = memAtArray(addr, offset, m);
+    uint32 *retval = memAtArray(m, addr, offset);
     if (retval == NULL) {
         if (success) *success = 0;
         return (uint32)-1;
@@ -147,74 +147,104 @@ uint32 readArray (uint32 addr, uint32 offset, machine m, char *success)
     }
 }
 
-uint32 *writeArray (uint32 addr, uint32 offset, uint32 value, machine m)
+uint32 *writeArray (machine m, uint32 addr, uint32 offset, uint32 value)
 {
-    uint32 *retval = memAtArray(addr, offset, m);
+    uint32 *retval = memAtArray(m, addr, offset);
     if (retval == NULL) return NULL;
     *retval = value;
     return retval;
 }
 
 // returns the next instruction address, or 0 for the next instruction
-uint32 execute (uint32 ins, machine m)
+uint32 execute (machine m, uint32 ins)
 {
     return 0;
 }
 
-uint32 testRead (uint32 addr, uint32 offset, machine m)
+uint32 testRead (machine m, uint32 addr, uint32 offset, uint32 expected)
 {
     char success = 0;
-    int mem = readArray(addr, offset, m, &success);
+    uint32 mem = readArray(m, addr, offset, &success);
     if (success == 1) {
-        printf("Reading memory at location %u:%u is: 0x%x\n", addr, offset, mem);
+        if (mem != expected) {
+            printf("ERROR: Memory read at %u:%u (0x%x) was not what was expected (0x%x).\n", addr, offset, mem, expected);
+        }
     } else {
-        printf("Failed to read memory at location %u:%u\n", addr, offset);
+        printf("ERROR: Failed to read memory at location %u:%u\n", addr, offset);
     }
     return mem;
 }
 
-int runTest (void)
+uint32 testWrite (machine m, uint32 addr, uint32 offset, uint32 value)
 {
-    sUnitTesting = 1;
-    uint32 *result = NULL;
+    uint32 *result = writeArray(m, addr, offset, value);
+    if (result == NULL) {
+        printf("ERROR: Write failed at %u:%u\n", addr, offset);
+        return 0;
+    }
+    if (*result != value) {
+        printf("ERROR: Write (0x%x) was not what was expected (0x%x).\n", *result, value);
+    }
+    return *result;
+}
+
+int memTests (void) 
+{
     int rc = 0;
     int mem = 0;
     char success = 0;
 
     machine m = (machine)calloc(1, sizeof(_machine));
-    printf("Creating memory at location 0...\n");
-    array a = allocMem(0, 10, m);
+    printf("Testing array allocations.\n");
+    array a = allocMem(m, 0, 10);
     if (a == NULL) {
         printf("Allocation failed!\n");
         free(m);
         return 1;
     }
-
-    testRead(0, 0, m);
-    result = writeArray(0, 0, 0xDEADBEEF, m);
-    testRead(0, 0, m);
-
-    a = allocMem(0, 10, m);
+    a = allocMem(m, 0, 10);
     if (a != NULL) {
         printf("ERROR: Double array allocation failed\n");
     }
+    uint32 loc = 0xFFFFFFFE;
+    a = allocMem(m, loc, 10);
+    if (a == NULL) {
+        printf("ERROR: Could not allocate memory at 0x%x\n", loc);
+    }
 
-    rc = abandonArray(0, m);
+    printf("Testing array read/write.\n");
+    testRead(m, 0, 0, 0);
+    testWrite(m, 0, 0, 0xDEADBEEF);
+    testRead(m, 0, 0, 0xDEADBEEF);
+    testWrite(m, loc, 9, 0xDEADBEEF);
+    testRead(m, loc, 0, 0);
+    testRead(m, loc, 9, 0xDEADBEEF);
+
+
+    printf("Testing array abandons.\n");
+    rc = abandonArray(m, 0);
     if (rc != 0) {
         printf("ERROR: Could not abandon array 0\n");
     }
-    rc = abandonArray(0, m);
+    rc = abandonArray(m, 0);
     if (rc == 0) {
         printf("ERROR: Double abandon shouldn't succeed\n");
     }
-
-    mem = readArray(0, 0, m, &success);
+    mem = readArray(m, 0, 0, &success);
     if (success) {
         printf("ERROR: Read from a memory location that was abandonded\n");
     }
 
     free(m);
     return 0;
+}
+
+int runTest (void)
+{
+    sUnitTesting = 1;
+    int rc = 0;
+    rc |= memTests();
+    return rc;
 }
 
 void usage (void) 
@@ -241,6 +271,7 @@ int main (int argc, char *argv[])
         switch(ch) {
             case 't':
                 status = runTest();
+                if (status == 0) printf("All tests passed.\n");
                 fflush(stdout);
                 exit(status);
                 break;
