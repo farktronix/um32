@@ -21,3 +21,13 @@ take antenna
 combine antenna radio
 take screw
 take motherboard
+combine screw motherboard
+take A-1920-IXB
+combine bolt A-1920-IXB
+take transistor
+combine processor A-1920-IXB
+take keypad
+combine keypad button
+take trash
+go south
+
