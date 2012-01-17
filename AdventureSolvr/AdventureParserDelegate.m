@@ -10,13 +10,6 @@
 
 @implementation AdventureParserDelegate
 
-- (id) init {
-    if ((self = [super init])) {
-        self.state = psBaseState;
-    }
-    return self;
-}
-
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName attributes:(NSDictionary *)attributeDict {
 
     self.depth++;
@@ -34,7 +27,7 @@
     } 
     
     if (self.state > psBaseState) {
-        if ([elementName isEqualToString:@"piled_on"]) {
+        if ([elementName isEqualToString:@"item"]) {
             Item *nextItem = [[Item alloc] initWithParent:self.currentItem];
             self.currentItem.piledOn = nextItem;
             self.currentItem = nextItem;
@@ -42,6 +35,9 @@
         }
         else if ([elementName isEqualToString:@"name"]) {
             nextState = psNameState;
+        }
+        else if ([elementName isEqualToString:@"adjective"]) {
+            nextState = psAdjectiveState;
         }
         else if ([elementName isEqualToString:@"kind"]) {
             Item *missingItem = [[Item alloc] initWithParent:self.currentItem];
@@ -60,6 +56,9 @@
     if (self.state == psNameState) {
         self.currentItem.name = string;
     }
+    else if (self.state == psAdjectiveState) {
+        self.currentItem.adjective = string;
+    }
 }
 
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName {
@@ -74,7 +73,8 @@
             self.currentItem = self.currentItem.parent;
             nextState = psItemState;
         }
-        else if ([elementName isEqualToString:@"name"]) {
+        else if ([elementName isEqualToString:@"name"] ||
+                 [elementName isEqualToString:@"adjective"]) {
             nextState = psItemState;
         }
     }

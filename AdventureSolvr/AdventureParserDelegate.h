@@ -13,6 +13,7 @@ typedef enum {
     psBaseState = 0,
     psItemState,
     psNameState,
+    psAdjectiveState,
     psKindState,
 } parseState;
 

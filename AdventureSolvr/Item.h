@@ -12,7 +12,8 @@
 - (id) initWithParent:(Item *)parent;
 @property (nonatomic, retain) Item *parent;
 
-@property (nonatomic,retain) NSString *name;
+@property (nonatomic,copy) NSString *name;
+@property (nonatomic,copy) NSString *adjective;
 @property (nonatomic,retain) NSMutableArray *dependencies;
 @property (nonatomic, assign) Item *piledOn;
 

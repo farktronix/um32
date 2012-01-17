@@ -35,7 +35,7 @@
 - (NSString *) _descriptionAtDepth:(int)n {
     NSMutableString *retval = [[NSMutableString alloc] init];
     for (int i = 0; i < n; i++) [retval appendString:@"\t"];
-    [retval appendFormat:@"Item \"%@\"", self.name];
+    [retval appendFormat:@"Item \"%@%@%@\"", self.adjective ? : @"", self.adjective ? @" " : @"", self.name];
     if ([self.dependencies count]) [retval appendFormat:@" depends on: %@", [self _dependencyString]];
     if (self.piledOn) [retval appendFormat:@", piled on:\n%@", [self.piledOn _descriptionAtDepth:n + 1]];
     return retval;
