@@ -10,33 +10,16 @@ hmonk:COMEFROM:Harmonious Monk:/home/hmonk.
 
 ADVENTURE
 
-go north
-take bolt
-take spring
-incinerate spring
-take button
-take processor
-take red pill
-incinerate red pill
-take radio
-take cache
-combine cache processor
-take blue transistor
-combine blue transistor radio
-take antenna
-incinerate antenna
-take screw
-take motherboard
-combine screw motherboard
-take A-1920-IXB
-combine bolt A-1920-IXB
-take transistor
-combine processor A-1920-IXB
-combine radio A-1920-IXB
-combine transistor A-1920-IXB
-combine motherboard A-1920-IXB
-take keypad
-combine keypad button
-combine keypad motherboard
-go south
-use keypad
+            Ridgewood Ct    Dorchester Ave  Blackstone Ave  Harper Ave
+
+52nd St     XXXXXXXXXXXX      progress bar      manual      status LED
+
+53rd St     XXXXXXXXXXXX        display        battery     EPROM burner
+
+54th St  => {Up,Down}loader    USB cable       textbook    RS232 adapter
+
+54th Pl     XXXXXXXXXXXX       power cord    jumper shunt     MOSFET
+
+Uploader: MOSFET, status LED, RS232 adapter, EPROM burner, battery
+Downloader: USB cable, display, jumper shunt, progress bar, power cord
+

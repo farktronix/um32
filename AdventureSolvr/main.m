@@ -11,37 +11,40 @@
 #import "AdventureParserDelegate.h"
 #import "Item.h"
 
-@interface ItemMapper : NSObject {
-    Item *_topItem;
-    Item *_rootItem;
-    NSMutableDictionary *_allItems;
-    NSMutableArray *_necessaryItems;
-    
-    Item *_treeRoot;
-}
+@interface ItemMapper : NSObject
+@property (nonatomic, retain) Item *topItem;
+@property (nonatomic, retain) Item *rootItem;
+@property (nonatomic, retain) Item *treeRoot;
+
+@property (nonatomic, retain) NSMutableDictionary *allItems;
+@property (nonatomic, retain) NSMutableArray *necessaryItems;
+
 - (id)initWithTopItem:(Item *)topItem;
+
 @end
 
 @implementation ItemMapper
 + (NSSet *)rootItems {
-    return [NSSet setWithObjects:@"keypad", @"USB Cable", @"display", @"jumper shunt", @"progress bar", @"power cord", nil];
+    return [NSSet setWithObjects:@"keypad", @"USB cable", @"display", @"jumper shunt", @"progress bar", @"power cord", @"MOSFET", @"status LED", @"RS232 adapter", @"EPROM burner", @"battery", nil];
 }
 
 - (id)initWithTopItem:(Item *)topItem {
     if ((self = [super init])) {
-        _topItem = [topItem retain];
-        _necessaryItems = [[NSMutableArray alloc] init];
-        _allItems = [[NSMutableDictionary alloc] init];
+        self.topItem = topItem;
+        self.necessaryItems = [[NSMutableArray alloc] init];
+        self.allItems = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
 
 - (void) _findRootItem {
     NSSet *rootItems = [[self class] rootItems];
-    Item *curItem = _topItem;
+    Item *curItem = self.topItem;
     while (curItem.piledOn != nil) {
-        [_allItems setObject:curItem forKey:curItem.name];
-        if ([rootItems containsObject:curItem.name]) _rootItem = curItem;
+        [self.allItems setObject:curItem forKey:curItem.name];
+        if ([rootItems containsObject:curItem.name]) {
+            self.rootItem = curItem;
+        }
         curItem = curItem.piledOn;
     }   
 }
@@ -62,7 +65,8 @@
     
     // Build up a tree of all dependencies
     for (Item *dep in item.dependencies) {
-        [root addDependency:[self _topoSortItems:[_allItems objectForKey:dep.name] withParent:root]];
+        if ([self.allItems objectForKey:dep.name] == nil) continue;
+        [root addDependency:[self _topoSortItems:[self.allItems objectForKey:dep.name] withParent:root]];
     }
     
     // Go through all of the dependencies of dependencies and remove their items from the tree
@@ -102,29 +106,31 @@
 }
 
 - (void) createActions {
-    printf("%s\n\n", [[_topItem description] UTF8String]);
+    printf("%s\n\n", [[self.topItem description] UTF8String]);
     
     [self _findRootItem];
-    _treeRoot = [self _topoSortItems:_rootItem withParent:nil];
-    [self _printTree:_treeRoot depth:0];
+    self.treeRoot = [self _topoSortItems:self.rootItem withParent:nil];
+    [self _printTree:self.treeRoot depth:0];
     
     printf("\n\n");
     
-    [_necessaryItems addObject:_treeRoot.name];
-    [self _addItemsNamesInTree:_treeRoot toArray:_necessaryItems];
+    [self.necessaryItems addObject:self.treeRoot.name];
+    [self _addItemsNamesInTree:self.treeRoot toArray:self.necessaryItems];
     
     NSMutableArray *inventory = [[NSMutableArray alloc] init];
-    Item *curItem = _topItem;
-    while (curItem.parent != _rootItem) {
+    Item *curItem = self.topItem;
+    BOOL rootItemAcquired = NO;
+    while (!rootItemAcquired || [[self.treeRoot dependencies] count]) {
+        if ([curItem.name isEqualToString:self.treeRoot.name]) rootItemAcquired = YES;
         printf("take %s\n", [curItem.fullName UTF8String]);
         [inventory addObject:curItem];
-        if (![_necessaryItems containsObject:curItem.name]) {
+        if (![self.necessaryItems containsObject:curItem.name]) {
             printf("incinerate %s\n", [curItem.fullName UTF8String]);
-            [_necessaryItems removeObject:curItem.name];
+            [self.necessaryItems removeObject:curItem.name];
             [inventory removeObject:curItem];
         } else {
             for (Item *invItem in [inventory copy]) {
-                Item *treeItem = [self _itemWithName:invItem.name inTree:_treeRoot];
+                Item *treeItem = [self _itemWithName:invItem.name inTree:self.treeRoot];
                 for (Item *treeChild in [treeItem.dependencies copy]) {
                     for (Item *curItem in [inventory copy]) {
                         if ([treeChild.dependencies count] == 0 &&
@@ -145,16 +151,26 @@
 
 int main (int argc, char *argv[]) {
     @autoreleasepool {
-        ssize_t readSize = 1<<12;
-        ssize_t nRead = 0;
-        ssize_t totalRead = 0;
-        NSMutableData *inData = [[NSMutableData alloc] initWithLength:readSize];
+        NSMutableData *inData = nil;
+        if (argc < 2) {
+            ssize_t readSize = 1<<12;
+            ssize_t nRead = 0;
+            ssize_t totalRead = 0;
+            inData = [[NSMutableData alloc] initWithLength:readSize];
+            
+            do {
+                nRead = read(STDIN_FILENO, (void *)[inData bytes] + totalRead, readSize);
+                totalRead += nRead;
+                if (nRead == readSize) [inData increaseLengthBy:readSize];
+            } while (nRead);
+        } else {
+            inData = [NSMutableData dataWithContentsOfFile:[[[NSProcessInfo processInfo] arguments] objectAtIndex:1]];
+        }
         
-        do {
-            nRead = read(STDIN_FILENO, (void *)[inData bytes] + totalRead, readSize);
-            totalRead += nRead;
-            if (nRead == readSize) [inData increaseLengthBy:readSize];
-        } while (nRead);
+        if (inData == nil) {
+            printf("Couldn't load data. Try again.\n");
+            return 1;
+        }
         
         AdventureParserDelegate *delegate = [[AdventureParserDelegate alloc] init];
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:inData];
