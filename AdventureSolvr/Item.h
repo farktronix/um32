@@ -14,6 +14,7 @@
 
 @property (nonatomic,copy) NSString *name;
 @property (nonatomic,copy) NSString *adjective;
+@property (readonly) NSString *fullName; // includes the adjective
 @property (nonatomic,retain) NSMutableArray *dependencies;
 @property (nonatomic, assign) Item *piledOn;
 

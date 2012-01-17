@@ -16,6 +16,8 @@
     Item *_rootItem;
     NSMutableDictionary *_allItems;
     NSMutableArray *_necessaryItems;
+    
+    Item *_treeRoot;
 }
 - (id)initWithTopItem:(Item *)topItem;
 @end
@@ -35,62 +37,107 @@
 }
 
 - (void) _findRootItem {
+    NSSet *rootItems = [[self class] rootItems];
     Item *curItem = _topItem;
     while (curItem.piledOn != nil) {
         [_allItems setObject:curItem forKey:curItem.name];
-        if ([[[self class] rootItems] containsObject:curItem.name]) _rootItem = curItem;
+        if ([rootItems containsObject:curItem.name]) _rootItem = curItem;
         curItem = curItem.piledOn;
     }   
 }
 
-- (void) _collectNecessaryItemsFromItem:(Item *)item parentMissingItems:(NSArray *)parentItems {
-    for (Item *dependItem in item.dependencies) {
-        BOOL shouldAdd = YES;
-        for (Item *missingItem in parentItems) {
-            if ([missingItem.name isEqualToString:dependItem.name]) shouldAdd = NO;
+- (void) _removeMissingDependenciesForItem:(Item *)item fromTree:(Item *)tree {
+    for (Item *dep in item.dependencies) {
+        for (Item *treeDep in [tree.dependencies copy]) {
+            if ([treeDep.name isEqualToString:dep.name]) [tree.dependencies removeObject:treeDep];
+            [self _removeMissingDependenciesForItem:dep fromTree:treeDep];
         }
-        if (shouldAdd) [_necessaryItems addObject:dependItem.name];
-        [self _collectNecessaryItemsFromItem:[_allItems objectForKey:dependItem.name] parentMissingItems:dependItem.dependencies];
     }
 }
 
+- (Item *) _topoSortItems:(Item *)item withParent:(Item *)parent {    
+    Item *root = [[Item alloc] initWithParent:parent];
+    root.name = item.name;
+    root.adjective = item.adjective;
+    
+    // Build up a tree of all dependencies
+    for (Item *dep in item.dependencies) {
+        [root addDependency:[self _topoSortItems:[_allItems objectForKey:dep.name] withParent:root]];
+    }
+    
+    // Go through all of the dependencies of dependencies and remove their items from the tree
+    for (Item *dep in item.dependencies) {
+        for (Item *treeDep in root.dependencies) {
+            [self _removeMissingDependenciesForItem:dep fromTree:treeDep];
+        }
+    }
+    
+    return root;
+}
+
+- (void) _addItemsNamesInTree:(Item *)tree toArray:(NSMutableArray *)array {
+    for (Item *dep in tree.dependencies) {
+        [array addObject:dep.name];
+        [self _addItemsNamesInTree:dep toArray:array];
+    }
+}
+
+- (void) _printTree:(Item *)tree depth:(int)n {
+    for (int i = 0; i < n; i++) printf(" ");
+    printf("%s\n", [tree.fullName UTF8String]);
+    for (Item *child in tree.dependencies) {
+        [self _printTree:child depth:n+1];
+    }
+}
+
+- (Item *) _itemWithName:(NSString *)name inTree:(Item *)tree {
+    if (tree == nil || name == nil) return nil;
+    if ([tree.name isEqualToString:name]) return tree;
+    Item *result = nil;
+    for (Item *child in tree.dependencies) {
+        result = [self _itemWithName:name inTree:child];
+        if (result) break;
+    }
+    return result;
+}
+
 - (void) createActions {
+    printf("%s\n\n", [[_topItem description] UTF8String]);
+    
     [self _findRootItem];
-    [_necessaryItems addObject:_rootItem.name];
-    [self _collectNecessaryItemsFromItem:_rootItem parentMissingItems:nil];
+    _treeRoot = [self _topoSortItems:_rootItem withParent:nil];
+    [self _printTree:_treeRoot depth:0];
+    
+    printf("\n\n");
+    
+    [_necessaryItems addObject:_treeRoot.name];
+    [self _addItemsNamesInTree:_treeRoot toArray:_necessaryItems];
     
     NSMutableArray *inventory = [[NSMutableArray alloc] init];
     Item *curItem = _topItem;
     while (curItem.parent != _rootItem) {
-        printf("take %s %s\n", curItem.adjective ? [curItem.adjective UTF8String] : "", [curItem.name UTF8String]);
+        printf("take %s\n", [curItem.fullName UTF8String]);
         [inventory addObject:curItem];
         if (![_necessaryItems containsObject:curItem.name]) {
-            printf("incinerate %s %s\n", curItem.adjective ? [curItem.adjective UTF8String] : "", [curItem.name UTF8String]);
+            printf("incinerate %s\n", [curItem.fullName UTF8String]);
             [_necessaryItems removeObject:curItem.name];
             [inventory removeObject:curItem];
         } else {
-            for (Item *inventoryItem in inventory) {
-                for (Item *dependency in inventoryItem.dependencies) {
-                    if ([dependency.name isEqualToString:curItem.name]) {
-                        printf("combine %s %s and %s%s\n", curItem.adjective ? [curItem.adjective UTF8String] : "", [curItem.name UTF8String],
-                               inventoryItem.adjective ? [inventoryItem.adjective UTF8String] : "", [inventoryItem.name UTF8String]);
-                        [inventory removeObject:curItem];
-                        goto done;
+            for (Item *invItem in [inventory copy]) {
+                Item *treeItem = [self _itemWithName:invItem.name inTree:_treeRoot];
+                for (Item *treeChild in [treeItem.dependencies copy]) {
+                    for (Item *curItem in [inventory copy]) {
+                        if ([treeChild.dependencies count] == 0 &&
+                            ![curItem.name isEqualToString:treeItem.name] &&
+                             [curItem.name isEqualToString:treeChild.name]) {
+                            printf("combine %s and %s\n", [curItem.name UTF8String], [treeItem.name UTF8String]);
+                            [inventory removeObject:curItem];
+                            [treeItem.dependencies removeObject:treeChild];
+                        }
                     }
                 }
             }
-            for (Item *inventoryItem in [inventory copy]) {
-                for (Item *dependency in curItem.dependencies) {
-                    if ([dependency.name isEqualToString:inventoryItem.name]) {
-                        printf("combine %s %s and %s%s\n", curItem.adjective ? [curItem.adjective UTF8String] : "", [curItem.name UTF8String],
-                               inventoryItem.adjective ? [inventoryItem.adjective UTF8String] : "", [inventoryItem.name UTF8String]);
-                        [inventory removeObject:inventoryItem];
-                    }
-                }
-            }
-        }
-done:
-        
+        }        
         curItem = curItem.piledOn;
     }
 }

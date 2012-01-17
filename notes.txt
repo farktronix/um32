@@ -1,3 +1,5 @@
+Decryption key: (\b.bb)(\v.vv)06FHPVboundvarHRAk
+
 howie xyzzy
 ohmega bidirectional
 
