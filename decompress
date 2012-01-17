@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "(\b.bb)(\v.vv)06FHPVboundvarHRAk
+p" | ./um codex.umz > codex.um

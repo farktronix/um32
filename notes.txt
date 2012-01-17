@@ -1,6 +1,10 @@
 howie xyzzy
 ohmega bidirectional
 
+howie:xyzzy:Howard Curry:/home/howie
+yang:U+262F:Y Yang:/home/yang
+hmonk:COMEFROM:Harmonious Monk:/home/hmonk. 
+
 
 ADVENTURE
 
@@ -18,7 +22,7 @@ combine cache processor
 take blue transistor
 combine blue transistor radio
 take antenna
-combine antenna radio
+incinerate antenna
 take screw
 take motherboard
 combine screw motherboard
@@ -26,8 +30,11 @@ take A-1920-IXB
 combine bolt A-1920-IXB
 take transistor
 combine processor A-1920-IXB
+combine radio A-1920-IXB
+combine transistor A-1920-IXB
+combine motherboard A-1920-IXB
 take keypad
 combine keypad button
-take trash
+combine keypad motherboard
 go south
-
+use keypad

@@ -1,0 +1,229 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		430A7F5214C4EEDA005CBEDE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 430A7F5114C4EEDA005CBEDE /* Foundation.framework */; };
+		430A7F6114C4EF35005CBEDE /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 430A7F6014C4EF35005CBEDE /* main.m */; };
+		430A7F6414C4EF7E005CBEDE /* AdventureParserDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 430A7F6314C4EF7E005CBEDE /* AdventureParserDelegate.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		430A7F4B14C4EEDA005CBEDE /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		430A7F4D14C4EEDA005CBEDE /* AdventureSolvr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AdventureSolvr; sourceTree = BUILT_PRODUCTS_DIR; };
+		430A7F5114C4EEDA005CBEDE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		430A7F6014C4EF35005CBEDE /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		430A7F6214C4EF7E005CBEDE /* AdventureParserDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AdventureParserDelegate.h; sourceTree = "<group>"; };
+		430A7F6314C4EF7E005CBEDE /* AdventureParserDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AdventureParserDelegate.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		430A7F4A14C4EEDA005CBEDE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				430A7F5214C4EEDA005CBEDE /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		430A7F4214C4EEDA005CBEDE = {
+			isa = PBXGroup;
+			children = (
+				430A7F5314C4EEDA005CBEDE /* AdventureSolvr */,
+				430A7F5014C4EEDA005CBEDE /* Frameworks */,
+				430A7F4E14C4EEDA005CBEDE /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		430A7F4E14C4EEDA005CBEDE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				430A7F4D14C4EEDA005CBEDE /* AdventureSolvr */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		430A7F5014C4EEDA005CBEDE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				430A7F5114C4EEDA005CBEDE /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		430A7F5314C4EEDA005CBEDE /* AdventureSolvr */ = {
+			isa = PBXGroup;
+			children = (
+				430A7F6014C4EF35005CBEDE /* main.m */,
+				430A7F6214C4EF7E005CBEDE /* AdventureParserDelegate.h */,
+				430A7F6314C4EF7E005CBEDE /* AdventureParserDelegate.m */,
+			);
+			name = AdventureSolvr;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		430A7F4C14C4EEDA005CBEDE /* AdventureSolvr */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 430A7F5C14C4EEDA005CBEDE /* Build configuration list for PBXNativeTarget "AdventureSolvr" */;
+			buildPhases = (
+				430A7F4914C4EEDA005CBEDE /* Sources */,
+				430A7F4A14C4EEDA005CBEDE /* Frameworks */,
+				430A7F4B14C4EEDA005CBEDE /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AdventureSolvr;
+			productName = AdventureSolvr;
+			productReference = 430A7F4D14C4EEDA005CBEDE /* AdventureSolvr */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		430A7F4414C4EEDA005CBEDE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0430;
+				ORGANIZATIONNAME = "Apple, Inc";
+			};
+			buildConfigurationList = 430A7F4714C4EEDA005CBEDE /* Build configuration list for PBXProject "AdventureSolvr" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 430A7F4214C4EEDA005CBEDE;
+			productRefGroup = 430A7F4E14C4EEDA005CBEDE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				430A7F4C14C4EEDA005CBEDE /* AdventureSolvr */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		430A7F4914C4EEDA005CBEDE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				430A7F6114C4EF35005CBEDE /* main.m in Sources */,
+				430A7F6414C4EF7E005CBEDE /* AdventureParserDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		430A7F5A14C4EEDA005CBEDE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = "";
+			};
+			name = Debug;
+		};
+		430A7F5B14C4EEDA005CBEDE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = "";
+			};
+			name = Release;
+		};
+		430A7F5D14C4EEDA005CBEDE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		430A7F5E14C4EEDA005CBEDE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		430A7F4714C4EEDA005CBEDE /* Build configuration list for PBXProject "AdventureSolvr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				430A7F5A14C4EEDA005CBEDE /* Debug */,
+				430A7F5B14C4EEDA005CBEDE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		430A7F5C14C4EEDA005CBEDE /* Build configuration list for PBXNativeTarget "AdventureSolvr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				430A7F5D14C4EEDA005CBEDE /* Debug */,
+				430A7F5E14C4EEDA005CBEDE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 430A7F4414C4EEDA005CBEDE /* Project object */;
+}
