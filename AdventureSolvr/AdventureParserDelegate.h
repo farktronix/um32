@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "Item.h"
 
 typedef enum {
     psBaseState = 0,
@@ -14,18 +15,6 @@ typedef enum {
     psNameState,
     psKindState,
 } parseState;
-
-@interface Item : NSObject 
-- (id) initWithParent:(Item *)parent;
-@property (nonatomic, retain) Item *parent;
-
-@property (nonatomic,retain) NSString *name;
-@property (nonatomic,retain) NSMutableArray *dependencies;
-@property (nonatomic, assign) Item *piledOn;
-
-- (void) addDependency:(Item *)depends;
-
-@end
 
 @interface AdventureParserDelegate : NSObject <NSXMLParserDelegate>
 

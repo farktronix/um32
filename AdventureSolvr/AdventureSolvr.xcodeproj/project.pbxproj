@@ -10,6 +10,7 @@
 		430A7F5214C4EEDA005CBEDE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 430A7F5114C4EEDA005CBEDE /* Foundation.framework */; };
 		430A7F6114C4EF35005CBEDE /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 430A7F6014C4EF35005CBEDE /* main.m */; };
 		430A7F6414C4EF7E005CBEDE /* AdventureParserDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 430A7F6314C4EF7E005CBEDE /* AdventureParserDelegate.m */; };
+		430A7F6A14C51881005CBEDE /* Item.m in Sources */ = {isa = PBXBuildFile; fileRef = 430A7F6914C51881005CBEDE /* Item.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -30,6 +31,8 @@
 		430A7F6014C4EF35005CBEDE /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		430A7F6214C4EF7E005CBEDE /* AdventureParserDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AdventureParserDelegate.h; sourceTree = "<group>"; };
 		430A7F6314C4EF7E005CBEDE /* AdventureParserDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AdventureParserDelegate.m; sourceTree = "<group>"; };
+		430A7F6814C51881005CBEDE /* Item.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Item.h; sourceTree = "<group>"; };
+		430A7F6914C51881005CBEDE /* Item.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Item.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +78,8 @@
 				430A7F6014C4EF35005CBEDE /* main.m */,
 				430A7F6214C4EF7E005CBEDE /* AdventureParserDelegate.h */,
 				430A7F6314C4EF7E005CBEDE /* AdventureParserDelegate.m */,
+				430A7F6814C51881005CBEDE /* Item.h */,
+				430A7F6914C51881005CBEDE /* Item.m */,
 			);
 			name = AdventureSolvr;
 			sourceTree = "<group>";
@@ -132,6 +137,7 @@
 			files = (
 				430A7F6114C4EF35005CBEDE /* main.m in Sources */,
 				430A7F6414C4EF7E005CBEDE /* AdventureParserDelegate.m in Sources */,
+				430A7F6A14C51881005CBEDE /* Item.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
